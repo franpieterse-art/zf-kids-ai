@@ -22,3 +22,17 @@
 .chat-panel>.avatar-top .friend-status{display:block;text-align:center}
 .chat-workspace>.avatar-dock{grid-column:2!important;grid-row:2/span 3!important;position:static!important;display:flex!important;visibility:visible!important;opacity:1!important}
 @media(max-width:680px){.chat-panel>.avatar-top .animated-friend{width:135px;height:145px}.chat-workspace>.avatar-dock .animated-friend{width:100px;height:110px}}
+
+/* V11: dance preview on selecting any friend, with original artwork unchanged */
+.friend.friend-dancing{border-color:#ffdb62;box-shadow:0 0 0 4px #ffdb6255;animation:cardDance .4s ease-in-out 6 alternate;transform-origin:50% 85%}
+.friend.friend-dancing img{animation:friendDance .4s ease-in-out 6 alternate;transform-origin:50% 85%}
+@keyframes cardDance{from{transform:translateY(-3px) rotate(-3deg)}to{transform:translateY(-12px) rotate(3deg)}}
+@media(prefers-reduced-motion:reduce){.friend.friend-dancing,.friend.friend-dancing img{animation:none}}
+
+/* V12 simulated mouth movement: visual overlay, not true facial lip-sync. */
+.chat-panel .friend-stage{position:relative}
+.chat-panel .friend-stage .talk-mouth{display:none;position:absolute;left:50%;top:64%;width:13%;height:6%;min-width:12px;min-height:7px;transform:translateX(-50%);border-radius:50%;background:#51223c;border:2px solid #fff7;box-shadow:0 1px 3px #0005;pointer-events:none;z-index:4}
+.chat-panel .friend-stage[data-mood="speaking"] .talk-mouth{display:block;animation:zfMouth 220ms ease-in-out infinite alternate}
+.chat-panel .friend-stage.mouth-beat .talk-mouth{animation-duration:140ms}
+@keyframes zfMouth{from{height:3%;border-radius:55%}to{height:10%;border-radius:45%}}
+@media(prefers-reduced-motion:reduce){.chat-panel .friend-stage[data-mood="speaking"] .talk-mouth{animation:none;height:5%}}
