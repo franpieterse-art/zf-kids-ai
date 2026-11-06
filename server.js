@@ -7,15 +7,29 @@ async function handler(req,res){let url=new URL(req.url,'http://localhost');if(u
 const model=process.env.GEMINI_MODEL||'gemini-2.5-flash';
 if(!/^[a-zA-Z0-9._-]+$/.test(model))throw Error('Invalid model');
 const prompt=system+' Child age: '+age+'. You are '+String(p.avatar||'Puppy').slice(0,30)+'. Keep answers short and engaging. Ask at most one follow-up question.';
-const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',{
+let selectedModel=model;
+async function requestGemini(name){return fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(name)+':generateContent',{
 method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':process.env.GEMINI_API_KEY},
 body:JSON.stringify({systemInstruction:{parts:[{text:prompt}]},contents:[{role:'user',parts:[{text:msg}]}],generationConfig:{maxOutputTokens:300,temperature:0.6},safetySettings:[{category:'HARM_CATEGORY_HARASSMENT',threshold:'BLOCK_LOW_AND_ABOVE'},{category:'HARM_CATEGORY_HATE_SPEECH',threshold:'BLOCK_LOW_AND_ABOVE'},{category:'HARM_CATEGORY_SEXUALLY_EXPLICIT',threshold:'BLOCK_LOW_AND_ABOVE'},{category:'HARM_CATEGORY_DANGEROUS_CONTENT',threshold:'BLOCK_LOW_AND_ABOVE'}]}),
-signal:AbortSignal.timeout(18000)});
-if(!response.ok)throw Error('Gemini HTTP '+response.status);
+signal:AbortSignal.timeout(18000)});}
+let response=await requestGemini(selectedModel);
+if(response.status===404){
+ const listing=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=100',{headers:{'x-goog-api-key':process.env.GEMINI_API_KEY},signal:AbortSignal.timeout(12000)});
+ if(!listing.ok){const detail=await listing.json().catch(()=>({}));throw Object.assign(new Error('Model lookup failed: '+String(detail.error?.message||listing.status).slice(0,180)),{httpStatus:listing.status});}
+ const available=(await listing.json()).models||[];
+ const eligible=available.filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace(/^models\//,''));
+ const preferred=['gemini-2.5-flash-lite','gemini-2.5-flash','gemini-2.0-flash-lite','gemini-2.0-flash'];
+ const candidate=preferred.find(x=>eligible.includes(x))||eligible.find(x=>/flash/i.test(x))||eligible[0];
+ if(!candidate)throw Object.assign(new Error('No generateContent models available to this API key.'),{httpStatus:404});
+ selectedModel=candidate;
+ console.log('Gemini configured model unavailable; retrying available model:',selectedModel);
+ response=await requestGemini(selectedModel);
+}
+if(!response.ok){let err=await response.json().catch(()=>({}));let reason=String(err.error?.message||'Request rejected').slice(0,220).replace(/AIza[\w-]+/g,'[redacted]');let failure=new Error(reason);failure.httpStatus=response.status;throw failure;}
 const data=await response.json();
 const reply=data.candidates?.[0]?.content?.parts?.map(x=>x.text||'').join('').trim();
 if(!reply)return send(res,200,{reply:'Let’s try another question! You can ask me about animals, numbers, or stories.',mode:'safety'});
-return send(res,200,{reply:reply.slice(0,1400),mode:'live'});
-}catch(e){console.error('Gemini request failed:',e.message);return send(res,200,{reply:fallback(msg,age),mode:'demo',notice:'AI connection unavailable; demo reply shown'});}
+return send(res,200,{reply:reply.slice(0,1400),mode:'live',model:selectedModel});
+}catch(e){console.error('Gemini request failed:',e.message);return send(res,200,{reply:'I cannot reach my AI brain right now. Please ask a grown-up to check the connection.',mode:'error',notice:'Gemini error '+(e.httpStatus||'network')+': '+String(e.message).slice(0,220)});}
 }if(req.method!=='GET')return send(res,405,{error:'Method not allowed'});let name=decodeURIComponent(url.pathname==='/'?'/index.html':url.pathname);let file=path.resolve(root,'.'+name);if(/(^|\/)\./.test(name))return send(res,403,{error:'Forbidden'});if(!file.startsWith(root+path.sep))return send(res,403,{error:'Forbidden'});fs.readFile(file,(err,data)=>{if(err)return send(res,404,{error:'Not found'});res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','X-Content-Type-Options':'nosniff'});res.end(data)})}
 if(require.main===module){http.createServer(handler).listen(process.env.PORT||3000,'0.0.0.0',()=>console.log('ZF Kids AI ready'))}module.exports={handler,fallback};
