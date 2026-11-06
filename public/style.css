@@ -15,3 +15,10 @@
 .chat-workspace>.avatar-dock .friend-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin:5px 0}
 .chat-workspace>.avatar-dock .friend-controls button{padding:7px;font-size:11px}
 @media(max-width:680px){.chat-workspace{grid-template-columns:minmax(0,1fr) 125px;gap:7px}.chat-workspace>.avatar-dock{padding:5px}.chat-workspace>.avatar-dock .animated-friend{width:105px;height:120px}.chat-workspace>.avatar-dock .friend-controls button{font-size:10px;padding:5px}.chatinput{flex-wrap:wrap}.chatinput input{flex-basis:100%}}
+
+/* V7: Two synchronized views of the same selected avatar. */
+.chat-panel>.avatar-top{display:flex;justify-content:center;align-items:center;padding:12px;margin-bottom:12px;background:rgba(255,255,255,.06);border-radius:18px}
+.chat-panel>.avatar-top .animated-friend{width:175px;height:185px;object-fit:contain;max-width:100%}
+.chat-panel>.avatar-top .friend-status{display:block;text-align:center}
+.chat-workspace>.avatar-dock{grid-column:2!important;grid-row:2/span 3!important;position:static!important;display:flex!important;visibility:visible!important;opacity:1!important}
+@media(max-width:680px){.chat-panel>.avatar-top .animated-friend{width:135px;height:145px}.chat-workspace>.avatar-dock .animated-friend{width:100px;height:110px}}
