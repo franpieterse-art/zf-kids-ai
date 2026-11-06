@@ -2,3 +2,28 @@
 
 /* ZF Kids AI animated friend — works with original approved PNG avatars */
 .friend-stage{position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:8px;isolation:isolate;margin:8px auto 4px}.friend-stage .animated-friend{transform-origin:50% 85%;animation:friendBreathe 3.4s ease-in-out infinite;will-change:transform;box-shadow:0 12px 30px #17145155}.friend-status{font-weight:800;font-size:.9rem;color:#fff;background:#27216f;border-radius:22px;padding:6px 14px}.friend-sparkle{position:absolute;right:-18px;top:-12px;font-size:32px;animation:sparkle 2s ease-in-out infinite;pointer-events:none}.friend-controls{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:8px 0 16px}.friend-controls button{font-size:.9rem}.friend-stage[data-mood="speaking"] .animated-friend{animation:friendTalk .34s ease-in-out infinite alternate}.friend-stage[data-mood="listening"] .animated-friend{animation:friendListen 1.3s ease-in-out infinite}.friend-stage[data-mood="thinking"] .animated-friend{animation:friendThink 1.6s ease-in-out infinite}.friend-stage[data-mood="happy"] .animated-friend{animation:friendHappy .5s ease-in-out 3}.friend-stage[data-mood="wave"] .animated-friend{animation:friendWave .45s ease-in-out 4}.friend-stage[data-mood="dance"] .animated-friend{animation:friendDance .5s ease-in-out 6}.friend-stage[data-mood="speaking"] .friend-status{background:#0e8b73}.friend-stage[data-mood="listening"] .friend-status{background:#a53d8e}@keyframes friendBreathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.025)}}@keyframes friendTalk{from{transform:translateY(0) scale(1,.98) rotate(-1deg)}to{transform:translateY(-5px) scale(1.035,1.045) rotate(1deg)}}@keyframes friendListen{0%,100%{transform:rotate(-3deg) scale(1)}50%{transform:rotate(3deg) scale(1.035)}}@keyframes friendThink{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(6deg) translateY(-5px)}}@keyframes friendHappy{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px) rotate(3deg)}}@keyframes friendWave{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg)}}@keyframes friendDance{0%,100%{transform:translateX(-9px) rotate(-8deg)}50%{transform:translateX(9px) rotate(8deg)}}@keyframes sparkle{0%,100%{opacity:.5;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}@media(prefers-reduced-motion:reduce){.friend-stage .animated-friend,.friend-sparkle{animation:none!important}}
+
+/* V3: keep the interactive friend visible in the right-hand conversation area */
+.chat-panel{display:grid;grid-template-columns:minmax(0,1fr) 270px;grid-template-areas:"workspace avatar";gap:18px;align-items:start}
+.chat-workspace{grid-area:workspace;min-width:0}
+.avatar-dock{grid-area:avatar;position:sticky;top:90px;align-self:start;padding:12px;border-radius:22px;background:rgba(255,255,255,.10);border:2px solid rgba(255,255,255,.18)}
+.avatar-dock .friend-stage{margin:0 auto;max-width:225px}
+.avatar-dock .animated-friend{max-width:190px;width:100%;height:auto;object-fit:contain}
+.avatar-dock .friend-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:10px}
+.avatar-dock .friend-controls button{font-size:12px;padding:9px 10px}
+@media(max-width:740px){.chat-panel{grid-template-columns:1fr;grid-template-areas:"avatar" "workspace"}.avatar-dock{position:relative;top:auto}.avatar-dock .animated-friend{max-width:155px}}
+
+/* V4: avatar stays in the lower-right corner beside the chat controls while scrolling */
+@media(min-width:741px){
+ .chat-panel{display:block;padding-right:270px;min-height:360px}
+ .chat-workspace{width:100%}
+ .avatar-dock{position:fixed;top:auto;bottom:18px;right:20px;width:240px;max-height:calc(100vh - 115px);overflow-y:auto;z-index:30;box-shadow:0 10px 30px rgba(0,0,0,.25);background:#57429c}
+ .avatar-dock .animated-friend{max-width:170px}
+ .avatar-dock .friend-stage{max-width:190px}
+}
+@media(max-width:740px){
+ .chat-panel{display:flex;flex-direction:column-reverse;gap:12px}
+ .avatar-dock{position:sticky;bottom:8px;top:auto;z-index:10;width:100%;background:#57429c;box-shadow:0 8px 20px rgba(0,0,0,.2)}
+ .avatar-dock .friend-stage{max-width:150px}
+ .avatar-dock .animated-friend{max-width:120px}
+}
