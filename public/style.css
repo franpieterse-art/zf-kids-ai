@@ -266,3 +266,20 @@ img.puppy-frame-animated,
 @media(max-width:550px){.friend[data-friend="Puppy"] img.puppy-frame-animated{height:150px!important;max-height:150px!important}}
 /* Don't let older dance styles shift the fixed image or frame. */
 .friend-stage:has(img.puppy-frame-animated):before{display:none!important}
+
+/* V42: fixed mobile dance viewport: never expand image, card or frame. */
+.friend[data-friend="Puppy"],.friend[data-friend="Puppy"].friend-dancing,
+.friend-stage:has(img.puppy-frame-animated){transform:none!important;animation:none!important;overflow:hidden!important}
+.friend[data-friend="Puppy"] img.puppy-frame-animated,
+.friend-stage img.puppy-frame-animated,
+.chat-panel .friend-stage img.puppy-frame-animated,
+.home-puppy-dance.puppy-frame-animated{
+  animation:none!important;transform:none!important;filter:none!important;
+  object-fit:cover!important;object-position:center center!important;
+  max-width:100%!important;max-height:none!important;
+  flex-shrink:0!important;display:block!important;
+}
+/* Override V41's fixed 210/185/150px heights with the exact pre-dance dimensions. */
+.friend-stage:has(img.puppy-frame-animated){width:auto!important;max-width:100%!important}
+.friend[data-friend="Puppy"] img.puppy-frame-animated{max-height:none!important}
+@media(max-width:550px){.friend[data-friend="Puppy"] img.puppy-frame-animated{max-height:none!important}}

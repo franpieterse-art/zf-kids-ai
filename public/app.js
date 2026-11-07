@@ -466,12 +466,20 @@ function puppyDance(target){
   if(!isPuppy)return;
   puppyTalkStop();
   const previous=puppyDanceTimers.get(img);
-  if(previous){clearTimeout(previous.timer);img.src=previous.original;}
+  if(previous){clearTimeout(previous.timer);img.src=previous.original;if(previous.previousStyle===null)img.removeAttribute('style');else img.setAttribute('style',previous.previousStyle);}
   const original=previous?previous.original:(/puppy-talking\.gif/i.test(src)?'/assets/puppy.png':src);
+  const bounds=img.getBoundingClientRect();
+  const previousStyle=img.getAttribute('style');
+  // Lock exactly the original on-screen dimensions, even in narrow mobile cards.
+  img.style.setProperty('width',Math.max(1,Math.round(bounds.width))+'px','important');
+  img.style.setProperty('height',Math.max(1,Math.round(bounds.height))+'px','important');
+  img.style.setProperty('max-width','100%','important');
+  img.style.setProperty('object-fit','cover','important');
+  img.style.setProperty('object-position','center center','important');
   img.classList.add('puppy-frame-animated');
   img.src='/assets/puppy-dance.gif?play='+Date.now();
-  const timer=setTimeout(()=>{img.src=original;img.classList.remove('puppy-frame-animated');puppyDanceTimers.delete(img)},3500);
-  puppyDanceTimers.set(img,{original,timer});
+  const timer=setTimeout(()=>{img.src=original;img.classList.remove('puppy-frame-animated');if(previousStyle===null)img.removeAttribute('style');else img.setAttribute('style',previousStyle);puppyDanceTimers.delete(img)},3500);
+  puppyDanceTimers.set(img,{original,timer,previousStyle});
   // Keep the dance GIF visible for the full dance; speech animation must not replace it.
   // A spoken greeting can resume after the dance finishes.
 
