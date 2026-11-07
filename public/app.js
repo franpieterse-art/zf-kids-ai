@@ -141,7 +141,7 @@ ${locked?'<p class="notice">🔒 Premium sticker book. Ask a parent to unlock it
 <img class="dress-avatar-img" src="/assets/${stickerAvatar.toLowerCase()}.png" alt="${stickerAvatar}">
 ${page.map((item,i)=>`<span class="placed-sticker ${stickerActive===i?'active':''}" data-placed="${i}" style="left:${item.x}%;top:${item.y}%;font-size:${item.size||dressStickers[item.type][2]}px;transform:translate(-50%,-50%) rotate(${item.rotation||0}deg) scale(${item.flipX||1},${item.flipY||1})" role="button" tabindex="0" aria-label="Move ${dressStickers[item.type][1]}">${dressStickers[item.type][0]}</span>`).join('')}
 </div></div>
-<div class="dress-tools"><button id="stickerRotateLeft" ${locked?'disabled':''}>↶ Rotate left</button><button id="stickerRotateRight" ${locked?'disabled':''}>↷ Rotate right</button><button id="stickerFlipH" ${locked?'disabled':''}>↔ Flip</button><button id="stickerFlipV" ${locked?'disabled':''}>↕ Flip</button><button id="stickerSmaller" ${locked?'disabled':''}>➖ Smaller</button><button id="stickerBigger" ${locked?'disabled':''}>➕ Bigger</button><button id="stickerRemove" ${locked?'disabled':''}>🗑 Remove selected</button><button id="stickerClear" ${locked?'disabled':''}>Clear avatar</button><button id="stickerSave" ${locked?'disabled':''}>⬇ Save picture</button></div>
+<div class="dress-tools"><button id="stickerRotateLeft" ${locked?'disabled':''}>↶ Rotate 1° left</button><button id="stickerRotateRight" ${locked?'disabled':''}>↷ Rotate 1° right</button><button id="stickerFlipH" ${locked?'disabled':''}>↔ Mirror</button><button id="stickerFlipV" ${locked?'disabled':''}>↕ Mirror</button><button id="stickerNudgeLeft" ${locked?'disabled':''}>← Left</button><button id="stickerNudgeRight" ${locked?'disabled':''}>Right →</button><button id="stickerNudgeUp" ${locked?'disabled':''}>↑ Up</button><button id="stickerNudgeDown" ${locked?'disabled':''}>↓ Down</button><button id="stickerSmaller" ${locked?'disabled':''}>➖ Smaller</button><button id="stickerBigger" ${locked?'disabled':''}>➕ Bigger</button><button id="stickerRemove" ${locked?'disabled':''}>🗑 Remove selected</button><button id="stickerClear" ${locked?'disabled':''}>Clear avatar</button><button id="stickerSave" ${locked?'disabled':''}>⬇ Save picture</button></div>
 <div class="sticker-adjust"><label>Sticker size <input id="stickerSizeSlider" type="range" min="9" max="220" value="${page[stickerActive]?.size||35}" ${locked?'disabled':''}></label><label>Rotation <input id="stickerRotationSlider" type="range" min="-180" max="180" value="${page[stickerActive]?.rotation||0}" ${locked?'disabled':''}></label></div><p class="sticker-help">Sticker positions and sizes are saved for each avatar on this device. Tap an existing sticker to select it, then resize or remove it.</p></div>`;
 if(locked)return;
 document.querySelectorAll('[data-dress-avatar]').forEach(b=>b.onclick=()=>{stickerAvatar=b.dataset.dressAvatar;stickerActive=null;stickersView()});
@@ -165,9 +165,21 @@ stage.onpointermove=e=>{
 };
 stage.onpointerup=()=>{if(drag){save();drag=null}};
 stage.onpointercancel=()=>{if(drag){save();drag=null}};
-$('#stickerBigger').onclick=()=>resizeSticker(10);
-$('#stickerRotateLeft').onclick=()=>adjustSticker('rotation',-15);
-$('#stickerRotateRight').onclick=()=>adjustSticker('rotation',15);
+function nudgeSticker(axis,delta){
+ const item=(state.stickerPages[stickerAvatar]||[])[stickerActive];
+ if(!item)return toast('Tap a sticker on the avatar first');
+ item[axis]=Math.max(1,Math.min(99,+(item[axis]+delta).toFixed(2)));
+ const el=stage.querySelector(`[data-placed="${stickerActive}"]`);
+ if(el)el.style[axis==='x'?'left':'top']=item[axis]+'%';
+ save();
+}
+$('#stickerNudgeLeft').onclick=()=>nudgeSticker('x',-0.5);
+$('#stickerNudgeRight').onclick=()=>nudgeSticker('x',0.5);
+$('#stickerNudgeUp').onclick=()=>nudgeSticker('y',-0.5);
+$('#stickerNudgeDown').onclick=()=>nudgeSticker('y',0.5);
+$('#stickerBigger').onclick=()=>resizeSticker(2);
+$('#stickerRotateLeft').onclick=()=>adjustSticker('rotation',-1);
+$('#stickerRotateRight').onclick=()=>adjustSticker('rotation',1);
 $('#stickerFlipH').onclick=()=>flipSticker('flipX');
 $('#stickerFlipV').onclick=()=>flipSticker('flipY');
 $('#stickerSizeSlider').oninput=e=>adjustSticker('size',0,Number(e.target.value));
@@ -191,7 +203,7 @@ function flipSticker(prop){
  if(!item)return toast('Tap a sticker on the avatar first');
  item[prop]=-(item[prop]||1);refreshSticker();
 }
-$('#stickerSmaller').onclick=()=>resizeSticker(-10);
+$('#stickerSmaller').onclick=()=>resizeSticker(-2);
 function resizeSticker(delta){const item=(state.stickerPages[stickerAvatar]||[])[stickerActive];if(!item)return toast('Tap a sticker on the avatar first');item.size=Math.min(220,Math.max(9,(item.size||35)+delta));save();stickersView()}
 $('#stickerRemove').onclick=()=>{if(stickerActive===null)return toast('Tap a sticker first');state.stickerPages[stickerAvatar].splice(stickerActive,1);stickerActive=null;save();stickersView()};
 $('#stickerClear').onclick=()=>{if(!confirm('Remove all stickers from '+stickerAvatar+'?'))return;state.stickerPages[stickerAvatar]=[];stickerActive=null;save();stickersView()};
