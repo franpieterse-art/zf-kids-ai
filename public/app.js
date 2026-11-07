@@ -388,6 +388,23 @@ function rewardsPanel(){
  overlay.innerHTML=`<div class="reward-dialog" role="dialog" aria-modal="true" aria-label="My reward points"><button id="rewardClose" class="reward-close">✕ Close</button><h2>🏆 My Reward Points</h2><div class="reward-total">⭐ ${rewardTotal()} points</div><p>Earn up to 10 points for each completed task. A parent approves every score.</p><div class="reward-list">${(state.rewardEntries||[]).slice(-15).reverse().map(e=>`<div>${esc(e.label)} <strong>+${e.points}/10 ⭐</strong></div>`).join('')||'<p>No rewards yet. Finish a chore to earn your first stars!</p>'}</div><h3>Check a finished task</h3><div class="reward-choices">${Object.keys(rewardLabels).map(id=>`<button data-reward-task="${id}">${esc(rewardLabels[id])}</button>`).join('')}</div></div>`;
  document.body.appendChild(overlay);overlay.querySelector('#rewardClose').onclick=()=>overlay.remove();overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};overlay.querySelectorAll('[data-reward-task]').forEach(b=>b.onclick=()=>openChoreReward(b.dataset.rewardTask));
 }
+async function compressChorePhoto(file){
+ if(!file.type.startsWith('image/'))throw Error('Please choose a picture.');
+ const url=URL.createObjectURL(file);
+ try{
+  const img=await new Promise((resolve,reject)=>{const el=new Image();el.onload=()=>resolve(el);el.onerror=()=>reject(new Error('Could not read this picture. Try taking a JPG photo.'));el.src=url});
+  const maxSide=1000,ratio=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
+  const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.naturalWidth*ratio));canvas.height=Math.max(1,Math.round(img.naturalHeight*ratio));
+  const ctx=canvas.getContext('2d');if(!ctx)throw Error('Photo resizing is not supported on this device.');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+  for(const quality of [0.78,0.65,0.5,0.35]){
+   const result=canvas.toDataURL('image/jpeg',quality);
+   if(result.length<2100000)return result;
+  }
+  throw Error('Picture is still too large. Please try another photo.');
+ }finally{URL.revokeObjectURL(url)}
+}
+
 function openChoreReward(id){
  if(!rewardLabels[id])return;
  const photoAllowed=['bed','homework','play'].includes(id);
@@ -395,16 +412,16 @@ function openChoreReward(id){
  if(state.voice)speak(words);
  let old=document.getElementById('zf-reward-modal');if(old)old.remove();
  const overlay=document.createElement('div');overlay.id='zf-reward-modal';overlay.className='reward-overlay';
- overlay.innerHTML=`<div class="reward-dialog" role="dialog" aria-modal="true" aria-label="Chore reward"><button id="rewardClose" class="reward-close">✕ Close</button><h2>🌟 ${esc(rewardLabels[id])}</h2><p>Great job! You can take a picture of your job for rewards!</p><p>${photoAllowed?'Ask a parent to help take a picture of the work only. Avoid faces, names and private information.':'This task is personal or cannot be reliably checked from a photo. A parent can give points instead.'}</p>${photoAllowed?'<label class="reward-photo">📷 Choose or take a photo <input type="file" id="rewardFile" accept="image/jpeg,image/png,image/webp" capture="environment"></label><button id="rewardAnalyse">🔎 Check picture with AI</button>':''}<p id="rewardFeedback" role="status"></p><div id="rewardApproval" hidden><h3>Parent approval</h3><label>Points (0–10) <input id="rewardScore" type="number" min="0" max="10" value="8"></label><label>Parent PIN <input id="rewardPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off"></label><button id="rewardConfirm">✓ Parent approves points</button></div><button id="rewardParent">👨‍👩‍👧 Parent score instead</button></div>`;
+ overlay.innerHTML=`<div class="reward-dialog" role="dialog" aria-modal="true" aria-label="Chore reward"><button id="rewardClose" class="reward-close">✕ Close</button><h2>🌟 ${esc(rewardLabels[id])}</h2><p>Great job! You can take a picture of your job for rewards!</p><p>${photoAllowed?'Ask a parent to help take a picture of the work only. Avoid faces, names and private information.':'This task is personal or cannot be reliably checked from a photo. A parent can give points instead.'}</p>${photoAllowed?'<label class="reward-photo">📷 Choose or take a photo <input type="file" id="rewardFile" accept="image/*" capture="environment"></label><button id="rewardAnalyse">🔎 Check picture with AI</button>':''}<p id="rewardFeedback" role="status"></p><div id="rewardApproval" hidden><h3>Parent approval</h3><label>Points (0–10) <input id="rewardScore" type="number" min="0" max="10" value="8"></label><label>Parent PIN <input id="rewardPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off"></label><button id="rewardConfirm">✓ Parent approves points</button></div><button id="rewardParent">👨‍👩‍👧 Parent score instead</button></div>`;
  document.body.appendChild(overlay);overlay.querySelector('#rewardClose').onclick=()=>overlay.remove();
  overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};
  const feedback=overlay.querySelector('#rewardFeedback'),approval=overlay.querySelector('#rewardApproval');
  overlay.querySelector('#rewardParent').onclick=()=>{approval.hidden=false;feedback.textContent='Ask your parent to choose a fair score.'};
  if(photoAllowed)overlay.querySelector('#rewardAnalyse').onclick=async()=>{
   const file=overlay.querySelector('#rewardFile').files[0];if(!file)return feedback.textContent='Choose a photo first.';
-  if(file.size>1800000)return feedback.textContent='This picture is too large. Choose one under 1.8 MB.';
+  feedback.textContent='Preparing a smaller photo for Gemini...';
   const btn=overlay.querySelector('#rewardAnalyse');btn.disabled=true;feedback.textContent='Gemini is looking at the picture...';
-  try{const image=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)});
+  try{const image=await compressChorePhoto(file);
    const response=await fetch('/api/chore-photo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task:id,image})});const data=await response.json();if(!response.ok)throw Error(data.error||'Could not check picture');
    feedback.textContent='AI suggestion: '+data.score+'/10 — '+data.feedback+' A parent must approve the points.';approval.hidden=false;overlay.querySelector('#rewardScore').value=data.score;
   }catch(err){feedback.textContent=err.message+' A parent can score the task instead.'}finally{btn.disabled=false}
