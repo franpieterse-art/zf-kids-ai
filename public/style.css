@@ -297,3 +297,7 @@ img.puppy-frame-animated,
 /* V49: character GIF is the only dance movement; card and avatar image remain stationary */
 .chat-panel .friend-stage[data-mood="dance"] .animated-friend{animation:none!important;transform:none!important}
 .friend[data-friend] img,.chat-panel .friend-stage img{object-fit:contain}
+
+/* V57: WhatsApp Daily Report always visible in chat avatar control panel */
+.chat-panel .friend-controls .zf-whatsapp-button{background:#25d366!important;color:#073b1e!important;border:2px solid #fff!important;width:100%;font-size:12px!important;padding:9px 6px!important;white-space:normal;line-height:1.25;box-shadow:0 3px 8px #0003}
+.chat-panel .friend-controls .zf-whatsapp-button:hover{background:#1fbd5a!important}
