@@ -385,7 +385,7 @@ function rewardTotal(){return (state.rewardEntries||[]).reduce((sum,e)=>sum+Numb
 function rewardsPanel(){
  let old=document.getElementById('zf-reward-modal');if(old)old.remove();
  const overlay=document.createElement('div');overlay.id='zf-reward-modal';overlay.className='reward-overlay';
- overlay.innerHTML=`<div class="reward-dialog" role="dialog" aria-modal="true" aria-label="My reward points"><button id="rewardClose" class="reward-close">✕ Close</button><h2>🏆 My Reward Points</h2><div class="reward-total">⭐ ${rewardTotal()} points</div><p>Earn up to 10 points for each completed task. A parent approves every score.</p><div class="reward-list">${(state.rewardEntries||[]).slice(-15).reverse().map(e=>`<div>${esc(e.label)} <strong>+${e.points}/10 ⭐</strong></div>`).join('')||'<p>No rewards yet. Finish a chore to earn your first stars!</p>'}</div><h3>Check a finished task</h3><div class="reward-choices">${Object.keys(rewardLabels).map(id=>`<button data-reward-task="${id}">${esc(rewardLabels[id])}</button>`).join('')}</div></div>`;
+ overlay.innerHTML=`<div class="reward-dialog" role="dialog" aria-modal="true" aria-label="My reward points"><button id="rewardClose" class="reward-close">✕ Close</button><h2>🏆 My Reward Points</h2><div class="reward-total" aria-live="polite">⭐ ${rewardTotal()} points</div><p>Earn up to 10 points for each completed task. Photo scores are awarded automatically. Other tasks can be scored by a parent.</p><div class="reward-list">${(state.rewardEntries||[]).slice(-15).reverse().map(e=>`<div>${esc(e.label)} <strong>+${e.points}/10 ⭐</strong></div>`).join('')||'<p>No rewards yet. Finish a chore to earn your first stars!</p>'}</div><h3>Check a finished task</h3><div class="reward-choices">${Object.keys(rewardLabels).map(id=>`<button data-reward-task="${id}">${esc(rewardLabels[id])}</button>`).join('')}</div></div>`;
  document.body.appendChild(overlay);overlay.querySelector('#rewardClose').onclick=()=>overlay.remove();overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};overlay.querySelectorAll('[data-reward-task]').forEach(b=>b.onclick=()=>openChoreReward(b.dataset.rewardTask));
 }
 async function compressChorePhoto(file){
@@ -405,6 +405,17 @@ async function compressChorePhoto(file){
  }finally{URL.revokeObjectURL(url)}
 }
 
+function awardChorePoints(id,n,feedback){
+ const today=new Date().toLocaleDateString('en-CA'),key=today+':'+id;
+ if((state.rewardEntries||[]).some(e=>e.key===key)){if(feedback)feedback.textContent='Already awarded for this task today. See your total in 🏆 Points.';return false}
+ n=Math.max(0,Math.min(10,Math.round(Number(n)||0)));
+ (state.rewardEntries||=[]).push({key,label:rewardLabels[id],points:n,date:today});
+ save();updateRewardButton();
+ toast('🏆 You earned '+n+' points! Total: '+rewardTotal());
+ if(state.voice)speak('Wonderful effort! You earned '+n+' reward points!');
+ if(document.getElementById('zf-reward-modal'))rewardsPanel();
+ return true;
+}
 function openChoreReward(id){
  if(!rewardLabels[id])return;
  const photoAllowed=['bed','homework','play'].includes(id);
@@ -412,7 +423,7 @@ function openChoreReward(id){
  if(state.voice)speak(words);
  let old=document.getElementById('zf-reward-modal');if(old)old.remove();
  const overlay=document.createElement('div');overlay.id='zf-reward-modal';overlay.className='reward-overlay';
- overlay.innerHTML=`<div class="reward-dialog" role="dialog" aria-modal="true" aria-label="Chore reward"><button id="rewardClose" class="reward-close">✕ Close</button><h2>🌟 ${esc(rewardLabels[id])}</h2><p>Great job! You can take a picture of your job for rewards!</p><p>${photoAllowed?'Ask a parent to help take a picture of the work only. Avoid faces, names and private information.':'This task is personal or cannot be reliably checked from a photo. A parent can give points instead.'}</p>${photoAllowed?'<label class="reward-photo">📷 Choose or take a photo <input type="file" id="rewardFile" accept="image/*" capture="environment"></label><button id="rewardAnalyse">🔎 Check picture with AI</button>':''}<p id="rewardFeedback" role="status"></p><div id="rewardApproval" hidden><h3>Parent approval</h3><label>Points (0–10) <input id="rewardScore" type="number" min="0" max="10" value="8"></label><label>Parent PIN <input id="rewardPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off"></label><button id="rewardConfirm">✓ Parent approves points</button></div><button id="rewardParent">👨‍👩‍👧 Parent score instead</button></div>`;
+ overlay.innerHTML=`<div class="reward-dialog" role="dialog" aria-modal="true" aria-label="Chore reward"><button id="rewardClose" class="reward-close">✕ Close</button><h2>🌟 ${esc(rewardLabels[id])}</h2><p>Great job! You can take a picture of your job for rewards!</p><p>${photoAllowed?'Ask a parent to help take a picture of the work only. Avoid faces, names and private information.':'This task is personal or cannot be reliably checked from a photo. A parent can give points instead.'}</p>${photoAllowed?'<label class="reward-photo">📷 Choose or take a photo <input type="file" id="rewardFile" accept="image/*" capture="environment"></label><button id="rewardAnalyse">🔎 Check picture with AI</button>':''}<p id="rewardFeedback" role="status"></p><div id="rewardApproval" hidden><h3>Parent score (tasks without photos)</h3><label>Points (0–10) <input id="rewardScore" type="number" min="0" max="10" value="8"></label><label>Parent PIN <input id="rewardPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off"></label><button id="rewardConfirm">✓ Save parent score</button></div><button id="rewardParent">👨‍👩‍👧 Parent score (optional)</button></div>`;
  document.body.appendChild(overlay);overlay.querySelector('#rewardClose').onclick=()=>overlay.remove();
  overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};
  const feedback=overlay.querySelector('#rewardFeedback'),approval=overlay.querySelector('#rewardApproval');
@@ -423,7 +434,7 @@ function openChoreReward(id){
   const btn=overlay.querySelector('#rewardAnalyse');btn.disabled=true;feedback.textContent='Gemini is looking at the picture...';
   try{const image=await compressChorePhoto(file);
    const response=await fetch('/api/chore-photo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task:id,image})});const data=await response.json();if(!response.ok)throw Error(data.error||'Could not check picture');
-   feedback.textContent='AI suggestion: '+data.score+'/10 — '+data.feedback+' A parent must approve the points.';approval.hidden=false;overlay.querySelector('#rewardScore').value=data.score;
+   if(!Number.isFinite(Number(data.score)))throw Error('Gemini did not return a valid score');if(awardChorePoints(id,data.score,feedback)){feedback.textContent='';}else{feedback.textContent='Points already awarded today.'}
   }catch(err){feedback.textContent=err.message+' A parent can score the task instead.'}finally{btn.disabled=false}
  };
  overlay.querySelector('#rewardConfirm').onclick=()=>{
@@ -433,7 +444,7 @@ function openChoreReward(id){
   if(!Number.isInteger(n)||n<0||n>10)return feedback.textContent='Choose whole points from 0 to 10.';
   const today=new Date().toLocaleDateString('en-CA'),key=today+':'+id;
   if((state.rewardEntries||[]).some(e=>e.key===key))return feedback.textContent='Points for this task have already been awarded today.';
-  (state.rewardEntries||=[]).push({key,label:rewardLabels[id],points:n,date:today});save();overlay.remove();toast('🏆 You earned '+n+' points! Total: '+rewardTotal());if(state.voice)speak('Wonderful effort! You earned '+n+' reward points!');updateRewardButton();
+  awardChorePoints(id,n,feedback);
  };
 }
 function updateRewardButton(){let b=document.getElementById('zfRewardButton');if(!b){b=document.createElement('button');b.id='zfRewardButton';b.onclick=rewardsPanel;document.body.appendChild(b)}b.textContent='🏆 '+rewardTotal()+' points';}
