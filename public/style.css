@@ -174,3 +174,10 @@
 @media(prefers-reduced-motion:reduce){.chat-panel .friend-stage .animated-friend,.friend.friend-dancing img,.friend-blink,.friend-speech-pulse{animation:none!important}}
 
 #zfRewardButton{position:fixed;top:62px;right:12px;z-index:9500;background:#ffda62;color:#25204e;border:2px solid #fff;border-radius:30px;padding:10px 15px;font-weight:800;box-shadow:0 3px 12px #0004;cursor:pointer}.reward-overlay{position:fixed;inset:0;z-index:999999;background:#111a;display:flex;align-items:center;justify-content:center;padding:14px;box-sizing:border-box}.reward-dialog{background:#fff;color:#302252;border-radius:20px;padding:20px;width:min(520px,100%);max-height:90vh;overflow:auto;box-sizing:border-box}.reward-dialog h2{margin:10px 0}.reward-dialog button{margin:5px;padding:10px 14px;border-radius:10px;cursor:pointer}.reward-close{float:right}.reward-total{font-size:30px;font-weight:900;color:#7a3ca2}.reward-list{max-height:160px;overflow:auto}.reward-list>div{display:flex;justify-content:space-between;padding:6px;border-bottom:1px solid #ddd}.reward-choices{display:flex;flex-wrap:wrap}.reward-photo{display:block;padding:12px;background:#eee;border-radius:10px}.reward-photo input{display:block;margin-top:8px;max-width:100%}#rewardApproval{padding:12px;border:2px solid #e3c9f6;border-radius:12px;margin-top:12px}#rewardApproval[hidden]{display:none}#rewardApproval label{display:block;margin:10px 0}#rewardApproval input{margin-left:10px;max-width:130px;padding:7px}#rewardFeedback{font-weight:700}
+/* V36: Keep rewards accessible without covering mobile games. */
+@media(max-width:700px){
+ #zfRewardButton{position:fixed;top:auto;bottom:calc(12px + env(safe-area-inset-bottom, 0px));right:10px;left:auto;max-width:112px;padding:7px 10px;font-size:12px;line-height:1.2;white-space:normal;z-index:100;border-radius:18px;box-shadow:0 2px 7px #0003}
+ body:has(#gamePlay:not([hidden])) #zfRewardButton,body:has(.game-library) #zfRewardButton{display:none!important}
+ .reward-overlay{padding:8px;align-items:center}
+ .reward-dialog{width:100%;max-height:calc(100dvh - 16px);padding:14px;border-radius:14px}
+}
