@@ -44,7 +44,7 @@ document.querySelectorAll('[data-picture]').forEach(b=>b.onclick=()=>{chosenColo
 function drawView(colour){
 if(colour&&chosenColouringPicture===null){colouringGallery();return}
 
-app.innerHTML=hero(colour?'Colouring Book 🎨':'Drawing Studio ✏️',colour?'Choose a colour, then tap inside the picture to fill it.':'Create your own artwork!')+`<div class="panel center">${colour?'<button id="chooseAnother">🖼 Choose another picture</button>':''}<div class="palette" id="palette"></div><p id="artHint">${colour?'🪣 Fill mode: tap inside a flower petal to colour it.':'✏️ Draw with your finger or mouse.'}</p><div class="canvaswrap"><canvas id="canvas" width="800" height="500" style="touch-action:none"></canvas></div><div class="actions">${colour?'<button id="artMode">✏️ Switch to Brush</button>':''}<button id="clear">🧽 Start Over</button><button id="download">⬇ Save Picture</button>${colour?'<button id="template">🌼 Change Picture</button>':''}</div></div>`;
+app.innerHTML=hero(colour?'Colouring Book 🎨':'Drawing Studio ✏️',colour?'Choose a colour, then tap inside the picture to fill it.':'Create your own artwork!')+`<div class="panel center">${colour?'<button id="chooseAnother">🖼 Choose another picture</button>':''}<div class="palette" id="palette"></div><p id="artHint">${colour?'🪣 Fill mode: tap inside a closed shape to colour it.':'✏️ Draw with your finger or mouse.'}</p><div class="canvaswrap"><canvas id="canvas" width="800" height="500" style="touch-action:none"></canvas></div><div class="actions">${colour?'<button id="artMode">✏️ Switch to Brush</button>':''}<button id="clear">🧽 Start Over</button><button id="download">⬇ Save Picture</button>${colour?'<button id="template">🌼 Change Picture</button>':''}</div></div>`;
 let canvas=$('#canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true}),color='#fa327a',down=false,template=0,mode=colour?'fill':'brush',start=null,moved=false;
 const colors=['#fa327a','#ff3c31','#ffa621','#f5d92c','#32ba62','#30b4fa','#6048df','#000000','#ffffff','#8b4e28'];
 $('#palette').innerHTML=colors.map((c,i)=>`<button class="swatch" style="background:${c}" data-color="${c}" aria-label="Colour ${c}" title="Colour ${i+1}"></button>`).join('');
@@ -59,11 +59,33 @@ function fillAt(x,y){
 const w=canvas.width,h=canvas.height,img=ctx.getImageData(0,0,w,h),d=img.data,at=(y*w+x)*4,src=[d[at],d[at+1],d[at+2]],hex=color.slice(1),target=[parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)];
 if(src.every((v,i)=>Math.abs(v-target[i])<8))return;
 const isOutline=i=>d[i]<100&&d[i+1]<100&&d[i+2]<100;
-if(isOutline(at)){toast('Tap inside the white shape, not the black outline');return}
+if(isOutline(at)){toast('Tap inside a closed shape, not the black outline');return}
 const matches=i=>Math.abs(d[i]-src[0])<=28&&Math.abs(d[i+1]-src[1])<=28&&Math.abs(d[i+2]-src[2])<=28&&!isOutline(i);
-let seen=new Uint8Array(w*h),stack=[y*w+x],count=0;
-while(stack.length){let n=stack.pop();if(n<0||n>=w*h||seen[n])continue;seen[n]=1;let i=n*4;if(!matches(i))continue;d[i]=target[0];d[i+1]=target[1];d[i+2]=target[2];d[i+3]=255;count++;let px=n%w;if(px>0)stack.push(n-1);if(px<w-1)stack.push(n+1);if(n>=w)stack.push(n-w);if(n<w*(h-1))stack.push(n+w)}
-if(count){ctx.putImageData(img,0,0);persist()}
+// Find the enclosed region first. Never paint a region connected to the page border.
+let seen=new Uint8Array(w*h),stack=[y*w+x],region=[],touchesEdge=false;
+while(stack.length){
+ let n=stack.pop();
+ if(n<0||n>=w*h||seen[n])continue;
+ seen[n]=1;
+ let i=n*4;
+ if(!matches(i))continue;
+ region.push(n);
+ let px=n%w,py=Math.floor(n/w);
+ if(px===0||px===w-1||py===0||py===h-1){touchesEdge=true;break}
+ if(px>0)stack.push(n-1);
+ if(px<w-1)stack.push(n+1);
+ if(py>0)stack.push(n-w);
+ if(py<h-1)stack.push(n+w);
+}
+if(touchesEdge){
+ toast('🎨 That is the page background. Tap inside a closed shape instead.');
+ return;
+}
+if(region.length){
+ for(const n of region){const i=n*4;d[i]=target[0];d[i+1]=target[1];d[i+2]=target[2];d[i+3]=255}
+ ctx.putImageData(img,0,0);
+ persist();
+}
 }
 canvas.onpointerdown=e=>{if(e.button!==undefined&&e.button!==0)return;down=true;moved=false;start=pos(e);canvas.setPointerCapture(e.pointerId);if(mode==='brush'){ctx.beginPath();ctx.moveTo(start.x,start.y)}};
 canvas.onpointermove=e=>{if(!down||mode!=='brush')return;let p=pos(e);moved=true;ctx.lineTo(p.x,p.y);ctx.strokeStyle=color;ctx.lineWidth=12;ctx.lineCap='round';ctx.stroke()};
