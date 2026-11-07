@@ -293,3 +293,7 @@ img.puppy-frame-animated,
 /* V44: viewport-bound dancing layer. Never participates in layout. */
 .zf-puppy-viewport{position:fixed!important;z-index:9999!important;overflow:hidden!important;pointer-events:none!important;box-sizing:border-box!important;transform:none!important;animation:none!important;border-radius:16px!important;contain:layout paint!important;background:transparent!important}
 .zf-puppy-viewport>img{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:contain!important;object-position:center center!important;animation:none!important;transform:none!important;filter:none!important;margin:0!important;padding:0!important;border:0!important}
+
+/* V49: character GIF is the only dance movement; card and avatar image remain stationary */
+.chat-panel .friend-stage[data-mood="dance"] .animated-friend{animation:none!important;transform:none!important}
+.friend[data-friend] img,.chat-panel .friend-stage img{object-fit:contain}
