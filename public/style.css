@@ -283,3 +283,9 @@ img.puppy-frame-animated,
 .friend-stage:has(img.puppy-frame-animated){width:auto!important;max-width:100%!important}
 .friend[data-friend="Puppy"] img.puppy-frame-animated{max-height:none!important}
 @media(max-width:550px){.friend[data-friend="Puppy"] img.puppy-frame-animated{max-height:none!important}}
+
+/* V43: isolated dance overlay; original image and card never move or resize. */
+.zf-puppy-dance-overlay{position:absolute!important;z-index:15;overflow:hidden!important;pointer-events:none!important;box-sizing:border-box!important;transform:none!important;animation:none!important;border-radius:inherit;background:transparent!important}
+.zf-puppy-dance-overlay>img{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:fill!important;transform:none!important;animation:none!important;filter:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:inherit!important}
+.friend[data-friend="Puppy"]{animation:none!important;transform:none!important}
+.friend[data-friend="Puppy"]>img,.home-puppy-dance{animation:none!important;transform:none!important}
