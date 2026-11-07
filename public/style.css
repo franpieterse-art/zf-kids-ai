@@ -131,3 +131,9 @@
 .game-play .box-grid,.game-play .bubble-board,.game-play .strategy-board,
 .game-play .frog-grid,.game-play .golf-track{width:min(260px,85vw)!important;max-width:260px!important}
 }
+
+.colour-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin:18px auto;max-width:1050px}
+.colour-choice{border:2px solid #d9c8ff;background:#fff;color:#382765;border-radius:16px;padding:9px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;min-width:0}
+.colour-choice img{width:100%;aspect-ratio:8/5;object-fit:contain;background:white;border-radius:9px}
+.colour-choice strong{font-size:15px}.colour-choice small{font-size:12px;color:#6742ac}.colour-choice:hover{border-color:#ffce47;transform:translateY(-2px)}
+.canvaswrap canvas{max-width:100%;height:auto}
