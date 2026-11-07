@@ -201,3 +201,35 @@
 @keyframes zf37-dance{0%,100%{transform:translateX(0) rotate(0)}16%,50%,83%{transform:translateX(-6px) rotate(-5deg) translateY(-4px)}33%,66%{transform:translateX(6px) rotate(5deg) translateY(-8px)}}
 @keyframes zf37-happy{0%,100%{transform:translateY(0)}45%{transform:translateY(-9px) scale(1.025)}}
 @media(prefers-reduced-motion:reduce){.chat-panel .friend-stage .animated-friend,.friend.friend-dancing img{animation:none!important}}
+
+/* V38: Puppy-specific choreographed click-to-dance. Original Puppy artwork stays intact. */
+.friend-stage .animated-friend,.friend[data-friend="Puppy"] img,.home-puppy-dance{cursor:pointer;touch-action:manipulation}
+.friend-stage.puppy-dance-active .animated-friend,
+.friend[data-friend="Puppy"].puppy-dance-active img,
+.home-puppy-dance.puppy-dance-active{
+  animation:puppy38-dance 3.6s cubic-bezier(.35,.05,.65,.95) 1 both!important;
+  transform-origin:50% 82%!important;
+  filter:drop-shadow(0 8px 8px rgba(70,40,80,.2));
+}
+.friend-stage.puppy-dance-active:before,
+.friend[data-friend="Puppy"].puppy-dance-active:before{
+  content:'✨ 🎵 ✨';position:absolute;left:50%;top:1%;transform:translateX(-50%);
+  z-index:4;font-size:1.5rem;pointer-events:none;animation:puppy38-sparkles 3.6s ease-in-out both;
+}
+.friend[data-friend="Puppy"]{position:relative}
+@keyframes puppy38-dance{
+  0%{transform:translate(0,0) rotate(0) scale(1)}
+  8%{transform:translate(-7px,-4px) rotate(-6deg) scale(1.02)}
+  17%{transform:translate(7px,-9px) rotate(7deg) scale(1.04)}
+  25%{transform:translate(-6px,0) rotate(-7deg) scale(1.02)}
+  34%{transform:translate(7px,-13px) rotate(8deg) scale(1.06)}
+  42%{transform:translate(0,0) rotate(0) scale(.98)}
+  51%{transform:translate(-8px,-6px) rotate(-9deg) scale(1.05)}
+  60%{transform:translate(9px,-14px) rotate(9deg) scale(1.07)}
+  69%{transform:translate(-5px,0) rotate(-5deg) scale(1.02)}
+  78%{transform:translate(6px,-8px) rotate(7deg) scale(1.05)}
+  88%{transform:translate(0,-17px) rotate(0) scale(1.08)}
+  100%{transform:translate(0,0) rotate(0) scale(1)}
+}
+@keyframes puppy38-sparkles{0%,100%{opacity:0;transform:translate(-50%,10px)}20%,80%{opacity:1;transform:translate(-50%,-8px)}}
+@media(prefers-reduced-motion:reduce){.friend-stage.puppy-dance-active .animated-friend,.friend[data-friend="Puppy"].puppy-dance-active img,.home-puppy-dance.puppy-dance-active{animation:none!important}}
