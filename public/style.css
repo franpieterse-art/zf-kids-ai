@@ -92,3 +92,42 @@
 .game-play .connect-board,.game-play .strategy-board {max-width:min(330px,88vw) !important}
 .game-play .memory-board,.game-play .box-grid,.game-play .bubble-board {max-width:330px;margin-left:auto;margin-right:auto}
 @media(max-height:650px){.game-play .snake-board,.game-play .multiplayer-snake-board{width:min(260px,85vw) !important;max-width:260px !important}}
+
+/* V21: unified compact play-area sizing matching the approved 310px snakes board. */
+.game-play #gameInner{width:100%;max-width:100%;margin-inline:auto}
+.game-play .snake-board,
+.game-play .multiplayer-snake-board,
+.game-play .connect-board,
+.game-play .ttt-board,
+.game-play .memory-board,
+.game-play .box-grid,
+.game-play .bubble-board,
+.game-play .strategy-board,
+.game-play .frog-grid,
+.game-play .golf-track {
+  box-sizing:border-box!important;
+  width:min(310px,88vw)!important;
+  max-width:310px!important;
+  margin:8px auto!important;
+}
+.game-play .connect-board{grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.game-play .connect-board button{width:100%;min-width:0;aspect-ratio:1;height:auto;padding:0;font-size:clamp(13px,3vw,25px)}
+.game-play .ttt-board{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.game-play .ttt-board button{width:100%;height:auto;aspect-ratio:1;font-size:clamp(26px,6vw,45px)}
+.game-play .memory-board{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.game-play .memory-board button{width:100%;height:auto;aspect-ratio:1;font-size:clamp(20px,5vw,35px)}
+.game-play .box-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.game-play .box-grid button{width:100%;height:auto;aspect-ratio:1;font-size:clamp(18px,5vw,34px)}
+.game-play .bubble-board{grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+.game-play .bubble-board button{width:100%;height:auto;aspect-ratio:1;font-size:clamp(15px,4vw,27px)}
+.game-play .strategy-board{gap:2px}
+.game-play .strategy-board button{width:100%;height:auto;aspect-ratio:1;font-size:clamp(12px,3vw,26px)}
+.game-play .frog-grid{display:flex;justify-content:center;gap:3px}
+.game-play .frog-grid span{min-width:0;flex:1;padding:4px 0;font-size:clamp(18px,4vw,28px)}
+.game-play .golf-track{min-height:150px;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:12px}
+.game-play .snake-controls{max-width:360px}
+@media(max-height:650px){
+.game-play .connect-board,.game-play .ttt-board,.game-play .memory-board,
+.game-play .box-grid,.game-play .bubble-board,.game-play .strategy-board,
+.game-play .frog-grid,.game-play .golf-track{width:min(260px,85vw)!important;max-width:260px!important}
+}
