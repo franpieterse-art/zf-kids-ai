@@ -461,26 +461,32 @@ function puppyDance(target){
  const img=target.tagName==='IMG'?target:target.querySelector('img');
  if(!img||!(/puppy/i.test(img.getAttribute('src')||'')||img.closest('[data-friend="Puppy"]')||(img.closest('.friend-stage')&&state.avatar==='Puppy')))return;
  puppyTalkStop();
- const prior=puppyDanceTimers.get(img);
- if(prior){clearTimeout(prior.timer);prior.overlay.remove();puppyDanceTimers.delete(img)}
- const parent=img.parentElement;
- if(!parent)return;
- const bounds=img.getBoundingClientRect();
- if(bounds.width<1||bounds.height<1)return;
- // Absolutely positioned overlay uses the existing image as its immovable frame.
- // Parent stays in document flow; original image remains visible beneath the GIF.
- const style=getComputedStyle(parent);
- const priorPosition=parent.style.position;
- if(style.position==='static')parent.style.position='relative';
- const overlay=document.createElement('div');overlay.className='zf-puppy-dance-overlay';
- const parentBounds=parent.getBoundingClientRect();
- overlay.style.left=(bounds.left-parentBounds.left+parent.scrollLeft)+'px';
- overlay.style.top=(bounds.top-parentBounds.top+parent.scrollTop)+'px';
- overlay.style.width=bounds.width+'px';overlay.style.height=bounds.height+'px';
- const gif=document.createElement('img');gif.src='/assets/puppy-dance.gif?play='+Date.now();gif.alt='Puppy dancing';
- overlay.appendChild(gif);parent.appendChild(overlay);
- const timer=setTimeout(()=>{overlay.remove();if(parent.style.position==='relative'&&priorPosition!=='relative')parent.style.position=priorPosition;puppyDanceTimers.delete(img)},3500);
- puppyDanceTimers.set(img,{overlay,timer});
+ const previous=puppyDanceTimers.get(img);
+ if(previous)previous.finish();
+ const rect=img.getBoundingClientRect();
+ if(rect.width<5||rect.height<5)return;
+ // Fixed viewport overlay is deliberately OUTSIDE the card and its transforms.
+ // It cannot change the card's size, flex layout, or page scroll position.
+ const overlay=document.createElement('div');overlay.className='zf-puppy-viewport';
+ const gif=document.createElement('img');gif.alt='Puppy dancing';
+ gif.src='/assets/puppy-dance.gif?play='+Date.now();overlay.appendChild(gif);
+ document.body.appendChild(overlay);
+ const originalVisibility=img.style.visibility;
+ img.style.visibility='hidden';
+ let done=false,frame=0,timer;
+ function position(){
+  if(done)return;
+  if(!img.isConnected){finish();return;}
+  const r=img.getBoundingClientRect();
+  overlay.style.left=r.left+'px';overlay.style.top=r.top+'px';
+  overlay.style.width=r.width+'px';overlay.style.height=r.height+'px';
+  frame=requestAnimationFrame(position);
+ }
+ function finish(){
+  if(done)return;done=true;cancelAnimationFrame(frame);clearTimeout(timer);
+  img.style.visibility=originalVisibility;overlay.remove();puppyDanceTimers.delete(img);
+ }
+ puppyDanceTimers.set(img,{finish});position();timer=setTimeout(finish,3500);
 }
 document.addEventListener('click',e=>{
  const target=e.target.closest('.friend-stage img, .friend[data-friend="Puppy"] img, img.home-puppy-dance');
