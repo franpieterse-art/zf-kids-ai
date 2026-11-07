@@ -118,9 +118,10 @@ if(type==='board'){
   const winner=positions.findIndex(p=>p===100);
   inner.innerHTML=`<p>🎲 Take turns rolling the dice. Climb ladders 🪜 and avoid snakes 🐍. First to 100 wins!</p>
   <div class="snake-player-strip">${positions.map((pos,j)=>`<div class="snake-player ${winner<0&&turn===j?'active':''}"><span>${pieces[j]} ${escapeGameText(playerNames[j])}</span><strong>Square ${pos}</strong></div>`).join('')}</div>
-  <div class="snake-board multiplayer-snake-board">${Array.from({length:100},(_,i)=>{const row=Math.floor(i/10),col=i%10,n=100-row*10-(row%2?9-col:col);const onSquare=positions.map((p,j)=>p===n?`<span class="snake-token" title="${escapeGameText(playerNames[j])}">${pieces[j]}</span>`:'').join('');return `<div class="snake-square ${onSquare?'occupied':''}"><small>${n}</small><span class="snake-mark">${jumps[n]?(jumps[n]>n?'🪜':'🐍'):''}</span><div class="snake-tokens">${onSquare}</div></div>`}).join('')}</div>
-  <p>${winner>=0?'🏆 '+escapeGameText(playerNames[winner])+' wins!':'🎯 '+pieces[turn]+' '+escapeGameText(playerNames[turn])+"’s turn"}${rolls?' · Last dice: '+lastRoll:''}</p>
-  <button id="roll" ${winner>=0?'disabled':''}>🎲 Roll dice</button> <button id="restartSnakes" class="secondary">Restart</button>`;
+  <div class="snake-controls"><p>${winner>=0?'🏆 '+escapeGameText(playerNames[winner])+' wins!':'🎯 '+pieces[turn]+' '+escapeGameText(playerNames[turn])+"’s turn"}${rolls?' · Last dice: '+lastRoll:''}</p>
+  <button id="roll" ${winner>=0?'disabled':''}>🎲 Roll dice</button> <button id="restartSnakes" class="secondary">Restart</button>
+</div>
+  <div class="snake-board multiplayer-snake-board">${Array.from({length:100},(_,i)=>{const row=Math.floor(i/10),col=i%10,n=100-row*10-(row%2?9-col:col);const onSquare=positions.map((p,j)=>p===n?`<span class="snake-token" title="${escapeGameText(playerNames[j])}">${pieces[j]}</span>`:'').join('');return `<div class="snake-square ${onSquare?'occupied':''}"><small>${n}</small><span class="snake-mark">${jumps[n]?(jumps[n]>n?'🪜':'🐍'):''}</span><div class="snake-tokens">${onSquare}</div></div>`}).join('')}</div>`;
   document.getElementById('restartSnakes').onclick=()=>{positions=Array(count).fill(1);turn=0;rolls=0;lastRoll=0;show()};
   const roll=document.getElementById('roll');if(roll)roll.onclick=()=>{const die=1+Math.floor(Math.random()*6);lastRoll=die;rolls++;const before=positions[turn];let next=before+die;if(next<=100){next=jumps[next]||next;positions[turn]=next}const message=pieces[turn]+' '+escapeGameText(playerNames[turn])+': '+die+(positions[turn]===before&&before+die>100?' (exact roll needed)':'');if(positions[turn]!==100)turn=(turn+1)%count;show();toast(message)};
  }

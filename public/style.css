@@ -46,3 +46,49 @@
 .player-count{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:15px}.player-count button.chosen{outline:4px solid #ffe16a}.player-notice{font-size:13px;opacity:.85}#playerNames{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:14px}#playerNames label{display:flex;flex-direction:column;gap:5px}#playerNames input{border-radius:9px;padding:9px;max-width:145px}
 
 .snake-player-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;margin:12px auto;max-width:650px}.snake-player{background:#e7ddff;color:#332060;border:2px solid transparent;border-radius:12px;padding:9px;display:flex;flex-direction:column;gap:3px}.snake-player.active{border-color:#ffc847;background:#fff0b5}.multiplayer-snake-board{max-width:650px;gap:3px}.multiplayer-snake-board .snake-square{min-width:0;aspect-ratio:1;display:flex;flex-direction:column;justify-content:space-between;align-items:center;background:#eee9ff;color:#342060;border-radius:5px;padding:2px;overflow:hidden}.multiplayer-snake-board .snake-square:nth-child(odd){background:#d6f2e4}.multiplayer-snake-board .snake-square.occupied{outline:2px solid #ffc847;outline-offset:-2px}.snake-square small{font-size:clamp(9px,1.6vw,13px);line-height:1}.snake-mark{font-size:clamp(9px,1.7vw,17px)}.snake-tokens{display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:0;min-height:16px}.snake-token{font-size:clamp(12px,2vw,21px);line-height:1}@media(max-width:480px){.multiplayer-snake-board{gap:1px}.multiplayer-snake-board .snake-square{padding:1px}.snake-token{font-size:12px}}
+
+/* V19: fit game board on a single screen and keep dice visible */
+.game-play{max-width:100%;min-width:0}.game-play #gameInner{max-width:100%;min-width:0}
+.snake-controls{position:sticky;top:4px;z-index:15;background:#392b75;border:2px solid #f9d85d;border-radius:12px;padding:8px;margin:6px auto 10px;box-shadow:0 3px 12px #0005}
+.snake-controls p{margin:3px 0 6px;font-size:14px}.snake-controls button{margin:2px;padding:8px 13px;min-height:40px}
+.multiplayer-snake-board{width:min(100%,calc(100dvh - 300px),500px);max-width:500px;margin:8px auto;gap:2px}
+.multiplayer-snake-board .snake-square{aspect-ratio:1;min-height:0;padding:1px;border-radius:3px}
+.multiplayer-snake-board .snake-square small{font-size:clamp(7px,1.2vw,11px)}
+.multiplayer-snake-board .snake-mark{font-size:clamp(8px,1.4vw,13px)}
+.multiplayer-snake-board .snake-token{font-size:clamp(10px,1.5vw,15px)}
+.snake-player-strip{margin:5px auto;gap:5px}.snake-player{padding:5px;font-size:12px}
+@media(max-height:680px){.multiplayer-snake-board{width:min(100%,calc(100dvh - 250px),380px)}.snake-player{padding:3px}.snake-controls{padding:5px}}
+@media(max-width:520px){.multiplayer-snake-board{width:min(100%,calc(100dvh - 310px),360px)}.snake-player-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.snake-controls{top:0}}
+
+/* V20: genuinely compact 10x10 boards; override legacy 650px sizing */
+.game-play .snake-board,
+.game-play .multiplayer-snake-board {
+  box-sizing:border-box !important;
+  width:min(310px, 88vw) !important;
+  max-width:310px !important;
+  margin:8px auto !important;
+  gap:1px !important;
+  grid-template-columns:repeat(10,minmax(0,1fr)) !important;
+}
+.game-play .snake-board > span,
+.game-play .multiplayer-snake-board > .snake-square {
+  box-sizing:border-box !important;
+  width:100% !important;
+  min-width:0 !important;
+  height:auto !important;
+  min-height:0 !important;
+  aspect-ratio:1 / 1 !important;
+  padding:1px !important;
+  overflow:hidden !important;
+  font-size:10px !important;
+}
+.game-play .snake-square small {font-size:9px !important;line-height:1 !important}
+.game-play .snake-mark {font-size:10px !important;line-height:1 !important}
+.game-play .snake-token {font-size:11px !important;line-height:1 !important}
+.game-play .snake-tokens {min-height:0 !important;gap:0 !important}
+.game-play .snake-controls {position:sticky;top:0;z-index:50;max-width:360px;margin:4px auto 8px;padding:6px}
+.game-play .snake-player-strip {max-width:360px;margin:5px auto;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+.game-play .snake-player {padding:4px;font-size:11px}
+.game-play .connect-board,.game-play .strategy-board {max-width:min(330px,88vw) !important}
+.game-play .memory-board,.game-play .box-grid,.game-play .bubble-board {max-width:330px;margin-left:auto;margin-right:auto}
+@media(max-height:650px){.game-play .snake-board,.game-play .multiplayer-snake-board{width:min(260px,85vw) !important;max-width:260px !important}}
