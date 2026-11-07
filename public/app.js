@@ -44,7 +44,7 @@ document.querySelectorAll('[data-picture]').forEach(b=>b.onclick=()=>{chosenColo
 function drawView(colour){
 if(colour&&chosenColouringPicture===null){colouringGallery();return}
 
-app.innerHTML=hero(colour?'Colouring Book 🎨':'Drawing Studio ✏️',colour?'Choose a colour, then tap inside the picture to fill it.':'Create your own artwork!')+`<div class="panel center">${colour?'<button id="chooseAnother">🖼 Choose another picture</button>':''}<div class="palette" id="palette"></div><p id="artHint">${colour?'🪣 Fill mode: tap inside a closed shape to colour it.':'✏️ Draw with your finger or mouse.'}</p><div class="canvaswrap"><canvas id="canvas" width="800" height="500" style="touch-action:none"></canvas></div><div class="actions">${colour?'<button id="artMode">✏️ Switch to Brush</button>':''}<button id="clear">🧽 Start Over</button><button id="download">⬇ Save Picture</button>${colour?'<button id="template">🌼 Change Picture</button>':''}</div></div>`;
+app.innerHTML=hero(colour?'Colouring Book 🎨':'Drawing Studio ✏️',colour?'Choose a colour, then tap inside the picture to fill it.':'Create your own artwork!')+`<div class="panel center">${colour?'<button id="chooseAnother">🖼 Choose another picture</button>':''}<div class="palette" id="palette"></div><p id="artHint">${colour?'🪣 Fill mode: tap inside a shape. Small gaps are repaired automatically.':'✏️ Draw with your finger or mouse.'}</p><div class="canvaswrap"><canvas id="canvas" width="800" height="500" style="touch-action:none"></canvas></div><div class="actions">${colour?'<button id="artMode">✏️ Switch to Brush</button>':''}<button id="clear">🧽 Start Over</button><button id="download">⬇ Save Picture</button>${colour?'<button id="template">🌼 Change Picture</button>':''}</div></div>`;
 let canvas=$('#canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true}),color='#fa327a',down=false,template=0,mode=colour?'fill':'brush',start=null,moved=false;
 const colors=['#fa327a','#ff3c31','#ffa621','#f5d92c','#32ba62','#30b4fa','#6048df','#000000','#ffffff','#8b4e28'];
 $('#palette').innerHTML=colors.map((c,i)=>`<button class="swatch" style="background:${c}" data-color="${c}" aria-label="Colour ${c}" title="Colour ${i+1}"></button>`).join('');
@@ -61,30 +61,50 @@ if(src.every((v,i)=>Math.abs(v-target[i])<8))return;
 const isOutline=i=>d[i]<100&&d[i+1]<100&&d[i+2]<100;
 if(isOutline(at)){toast('Tap inside a closed shape, not the black outline');return}
 const matches=i=>Math.abs(d[i]-src[0])<=28&&Math.abs(d[i+1]-src[1])<=28&&Math.abs(d[i+2]-src[2])<=28&&!isOutline(i);
-// Find the enclosed region first. Never paint a region connected to the page border.
-let seen=new Uint8Array(w*h),stack=[y*w+x],region=[],touchesEdge=false;
-while(stack.length){
- let n=stack.pop();
- if(n<0||n>=w*h||seen[n])continue;
- seen[n]=1;
- let i=n*4;
- if(!matches(i))continue;
- region.push(n);
- let px=n%w,py=Math.floor(n/w);
- if(px===0||px===w-1||py===0||py===h-1){touchesEdge=true;break}
- if(px>0)stack.push(n-1);
- if(px<w-1)stack.push(n+1);
- if(py>0)stack.push(n-w);
- if(py<h-1)stack.push(n+w);
+// Smart fill: bridge small gaps in outlines, but never flood the outside page.
+const originalInk=new Uint8Array(w*h);
+for(let n=0;n<w*h;n++){let i=n*4;originalInk[n]=(d[i]<135&&d[i+1]<135&&d[i+2]<135)?1:0}
+function findRegion(barrier){
+ let seen=new Uint8Array(w*h),stack=[y*w+x],region=[],edge=false;
+ while(stack.length){
+  let n=stack.pop();if(n<0||n>=w*h||seen[n]||barrier[n])continue;
+  seen[n]=1;let i=n*4;
+  if(!matches(i))continue;
+  region.push(n);
+  let px=n%w,py=(n/w)|0;
+  if(px===0||px===w-1||py===0||py===h-1){edge=true;break}
+  if(px>0)stack.push(n-1);
+  if(px<w-1)stack.push(n+1);
+  if(py>0)stack.push(n-w);
+  if(py<h-1)stack.push(n+w);
+ }
+ return {region,edge};
 }
-if(touchesEdge){
- toast('🎨 That is the page background. Tap inside a closed shape instead.');
+let result=findRegion(originalInk);
+// Close narrow horizontal/vertical breaks in the artwork without modifying the drawing.
+if(result.edge){
+ for(const gap of [5,10,18]){
+  const barrier=originalInk.slice();
+  for(let py=1;py<h-1;py++)for(let px=1;px<w-1;px++){
+   const n=py*w+px;if(!originalInk[n])continue;
+   for(let k=2;k<=gap;k++){
+    if(px+k<w-1&&originalInk[n+k]){for(let t=1;t<k;t++)barrier[n+t]=1;break}
+   }
+   for(let k=2;k<=gap;k++){
+    if(py+k<h-1&&originalInk[n+k*w]){for(let t=1;t<k;t++)barrier[n+t*w]=1;break}
+   }
+  }
+  result=findRegion(barrier);
+  if(!result.edge&&result.region.length>12)break;
+ }
+}
+if(result.edge){
+ toast('This outline is open. Try Brush mode to colour this area.');
  return;
 }
-if(region.length){
- for(const n of region){const i=n*4;d[i]=target[0];d[i+1]=target[1];d[i+2]=target[2];d[i+3]=255}
- ctx.putImageData(img,0,0);
- persist();
+if(result.region.length){
+ for(const n of result.region){let i=n*4;d[i]=target[0];d[i+1]=target[1];d[i+2]=target[2];d[i+3]=255}
+ ctx.putImageData(img,0,0);persist();
 }
 }
 canvas.onpointerdown=e=>{if(e.button!==undefined&&e.button!==0)return;down=true;moved=false;start=pos(e);canvas.setPointerCapture(e.pointerId);if(mode==='brush'){ctx.beginPath();ctx.moveTo(start.x,start.y)}};
