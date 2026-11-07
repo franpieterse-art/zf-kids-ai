@@ -453,29 +453,29 @@ updateRewardButton();
 let lastAlarm='';setInterval(()=>{if(!state.reminders||!state.wake)return;let d=new Date(),hm=d.toTimeString().slice(0,5),today=d.toDateString();if(hm===state.wake&&lastAlarm!==today){lastAlarm=today;toast('☀️ Good morning! Time to wake up!');speak('Good morning! Rise and shine!')}} ,15000);render();
 
 
-// V38 Puppy: tapping the character starts a 3.6-second choreography.
-let puppyDanceTimeout;
+// V39: swap the static character artwork for independently animated dance frames.
+// The container remains fixed; the animation is inside the GIF, not a CSS translation.
+const puppyDanceTimers=new WeakMap();
 function puppyDance(target){
-  if(state.avatar!=='Puppy' && !target.closest('[data-friend="Puppy"]'))return;
-  const element=target.closest('.friend-stage, .friend[data-friend="Puppy"], .home-puppy-dance');
-  if(!element)return;
-  clearTimeout(puppyDanceTimeout);
-  element.classList.remove('puppy-dance-active');
-  void element.offsetWidth;
-  element.classList.add('puppy-dance-active');
-  if(element.classList.contains('friend-stage'))friendMood('dance',3600);
-  if('speechSynthesis' in window && state.voice!==false){
-    // Do not interrupt an existing conversation to play dance audio.
-    if(!speechSynthesis.speaking) sayWithCharacter('Woohoo! Dance with me!', 'Puppy');
+  const container=target.closest('.friend-stage, .friend[data-friend="Puppy"], .home-puppy-dance');
+  if(!container)return;
+  const img=target.tagName==='IMG'?target:container.querySelector('img');
+  if(!img)return;
+  const src=img.getAttribute('src')||'';
+  const isPuppy=/puppy/i.test(src)||container.matches('[data-friend="Puppy"]')||(container.classList.contains('friend-stage')&&state.avatar==='Puppy');
+  if(!isPuppy)return;
+  const previous=puppyDanceTimers.get(img);
+  if(previous){clearTimeout(previous.timer);img.src=previous.original;}
+  const original=previous?previous.original:src;
+  img.classList.add('puppy-frame-animated');
+  img.src='/assets/puppy-dance.gif?play='+Date.now();
+  const timer=setTimeout(()=>{img.src=original;img.classList.remove('puppy-frame-animated');puppyDanceTimers.delete(img)},3500);
+  puppyDanceTimers.set(img,{original,timer});
+  if('speechSynthesis' in window&&state.voice!==false&&!speechSynthesis.speaking){
+    sayWithCharacter('Woohoo! Dance with me!','Puppy');
   }
-  puppyDanceTimeout=setTimeout(()=>element.classList.remove('puppy-dance-active'),3700);
 }
 document.addEventListener('click',e=>{
-  const target=e.target.closest('.friend-stage .animated-friend, .friend[data-friend="Puppy"] img, .home-puppy-dance');
-  if(target)puppyDance(target);
-});
-document.addEventListener('keydown',e=>{
-  if(e.key!=='Enter'&&e.key!==' ')return;
-  const target=e.target.closest('.friend-stage .animated-friend, .home-puppy-dance');
-  if(target){e.preventDefault();puppyDance(target)}
+ const target=e.target.closest('.friend-stage img, .friend[data-friend="Puppy"] img, .home-puppy-dance img');
+ if(target)puppyDance(target);
 });

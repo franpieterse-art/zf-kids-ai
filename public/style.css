@@ -233,3 +233,11 @@
 }
 @keyframes puppy38-sparkles{0%,100%{opacity:0;transform:translate(-50%,10px)}20%,80%{opacity:1;transform:translate(-50%,-8px)}}
 @media(prefers-reduced-motion:reduce){.friend-stage.puppy-dance-active .animated-friend,.friend[data-friend="Puppy"].puppy-dance-active img,.home-puppy-dance.puppy-dance-active{animation:none!important}}
+
+/* V39: frame-by-frame character animation, keep the image element stationary. */
+img.puppy-frame-animated,
+.friend-stage img.puppy-frame-animated,
+.friend img.puppy-frame-animated,
+.puppy-dance-active img.puppy-frame-animated{animation:none!important;transform:none!important;filter:none!important;object-fit:contain!important}
+.friend-stage:has(img.puppy-frame-animated),
+.friend:has(img.puppy-frame-animated){animation:none!important;transform:none!important}
