@@ -241,3 +241,28 @@ img.puppy-frame-animated,
 .puppy-dance-active img.puppy-frame-animated{animation:none!important;transform:none!important;filter:none!important;object-fit:contain!important}
 .friend-stage:has(img.puppy-frame-animated),
 .friend:has(img.puppy-frame-animated){animation:none!important;transform:none!important}
+
+/* V40: display talking artwork without translating its container */
+.chat-panel .friend-stage img.puppy-talking-frame{animation:none!important;transform:none!important;filter:none!important}
+
+/* V41: Keep the Puppy dance artwork inside the original fixed frame. */
+.friend-stage:has(img.puppy-frame-animated){
+  width:190px;max-width:100%;overflow:hidden!important;
+  border-radius:25px;transform:none!important;animation:none!important;
+}
+.friend-stage img.puppy-frame-animated,
+.chat-panel .friend-stage img.puppy-frame-animated,
+.friend[data-friend="Puppy"] img.puppy-frame-animated,
+.home-puppy-dance.puppy-frame-animated,
+.puppy-dance-active img.puppy-frame-animated{
+  display:block!important;width:100%!important;max-width:100%!important;
+  height:210px!important;max-height:210px!important;
+  object-fit:contain!important;object-position:center center!important;
+  transform:none!important;animation:none!important;filter:none!important;
+  border-radius:inherit;
+}
+.friend[data-friend="Puppy"]{overflow:hidden!important}
+.friend[data-friend="Puppy"] img.puppy-frame-animated{height:185px!important;max-height:185px!important}
+@media(max-width:550px){.friend[data-friend="Puppy"] img.puppy-frame-animated{height:150px!important;max-height:150px!important}}
+/* Don't let older dance styles shift the fixed image or frame. */
+.friend-stage:has(img.puppy-frame-animated):before{display:none!important}
