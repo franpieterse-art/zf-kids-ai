@@ -117,7 +117,67 @@ $('#clear').onclick=()=>{blank();if(colour)state.colouring=null;else state.drawi
 $('#download').onclick=()=>{let a=document.createElement('a');a.download='zf-kids-art.png';a.href=canvas.toDataURL();a.click()};
 if(colour){$('#template').textContent='🖼 Choose Picture';$('#template').onclick=()=>{chosenColouringPicture=null;state.colouring=null;colouringGallery()};$('#chooseAnother').onclick=()=>{chosenColouringPicture=null;state.colouring=null;colouringGallery()}};
 }
-function stickersView(){let locked=!state.premium;app.innerHTML=hero('My Sticker Book 📒','Collect and arrange your favourite stickers!')+`<div class="panel center">${locked?'<p class="notice">🔒 Premium feature. Ask a parent to unlock it. Parents can preview in Parent Setup.</p>':''}<div class="stickerbook" id="book">${(state.stickerPage||[]).map(x=>`<span class="sticker">${emojis[x]}</span>`).join('')}</div><h2>Choose a sticker</h2><div>${emojis.map((e,i)=>`<button class="sticker" data-sticker="${i}" ${locked?'disabled':''}>${e}</button>`).join('')}</div><div class="actions"><button id="clearbook" ${locked?'disabled':''}>Clear Page</button></div></div>`;document.querySelectorAll('[data-sticker]').forEach(b=>b.onclick=()=>{state.stickerPage.push(Number(b.dataset.sticker));save();stickersView()});$('#clearbook').onclick=()=>{state.stickerPage=[];save();stickersView()}}
+
+const dressStickers=[
+['🧢','Blue cap',19],['🎩','Top hat',22],['👑','Crown',24],['👒','Sun hat',25],['🕶️','Sunglasses',19],
+['👓','Glasses',18],['🥽','Goggles',19],['🎀','Pink bow',16],['🎧','Headphones',23],['🧣','Scarf',19],
+['👔','Tie',16],['🦋','Butterfly',17],['⭐','Star',13],['❤️','Heart',13],['🌸','Flower',14]
+];
+let stickerSelected=0,stickerAvatar=null,stickerActive=null;
+function stickersView(){
+const locked=!state.premium;
+if(!stickerAvatar)stickerAvatar=state.avatar||'Puppy';
+if(!state.stickerPages||typeof state.stickerPages!=='object')state.stickerPages={};
+const page=state.stickerPages[stickerAvatar]||[];
+app.innerHTML=hero('My Sticker Book 📒','Choose an avatar, select a sticker, then tap where it belongs!')+
+`<div class="panel center sticker-editor">
+${locked?'<p class="notice">🔒 Premium sticker book. Ask a parent to unlock it in Parent Setup. This is a developer preview, not a payment system.</p>':''}
+<h2>1. Choose an avatar</h2>
+<div class="sticker-avatars">${names.map(n=>`<button class="sticker-avatar-choice ${stickerAvatar===n?'selected':''}" data-dress-avatar="${n}" ${locked?'disabled':''}><img src="/assets/${n.toLowerCase()}.png" alt=""><span>${n}</span></button>`).join('')}</div>
+<h2>2. Choose one of 15 stickers</h2>
+<div class="dress-palette">${dressStickers.map(([icon,label],i)=>`<button class="dress-sticker ${stickerSelected===i?'selected':''}" data-dress-sticker="${i}" title="${label}" ${locked?'disabled':''}><span>${icon}</span><small>${label}</small></button>`).join('')}</div>
+<p id="dressHint">3. Tap on the avatar to place your selected sticker. Drag stickers to move them.</p>
+<div class="dress-stage-wrap"><div class="dress-stage" id="dressStage" role="group" aria-label="Decorate ${stickerAvatar}">
+<img class="dress-avatar-img" src="/assets/${stickerAvatar.toLowerCase()}.png" alt="${stickerAvatar}">
+${page.map((item,i)=>`<span class="placed-sticker ${stickerActive===i?'active':''}" data-placed="${i}" style="left:${item.x}%;top:${item.y}%;font-size:${item.size||dressStickers[item.type][2]}px" role="button" tabindex="0" aria-label="Move ${dressStickers[item.type][1]}">${dressStickers[item.type][0]}</span>`).join('')}
+</div></div>
+<div class="dress-tools"><button id="stickerSmaller" ${locked?'disabled':''}>➖ Smaller</button><button id="stickerBigger" ${locked?'disabled':''}>➕ Bigger</button><button id="stickerRemove" ${locked?'disabled':''}>🗑 Remove selected</button><button id="stickerClear" ${locked?'disabled':''}>Clear avatar</button><button id="stickerSave" ${locked?'disabled':''}>⬇ Save picture</button></div>
+<p class="sticker-help">Sticker positions and sizes are saved for each avatar on this device. Tap an existing sticker to select it, then resize or remove it.</p></div>`;
+if(locked)return;
+document.querySelectorAll('[data-dress-avatar]').forEach(b=>b.onclick=()=>{stickerAvatar=b.dataset.dressAvatar;stickerActive=null;stickersView()});
+document.querySelectorAll('[data-dress-sticker]').forEach(b=>b.onclick=()=>{stickerSelected=+b.dataset.dressSticker;document.querySelectorAll('[data-dress-sticker]').forEach(x=>x.classList.toggle('selected',x===b));$('#dressHint').textContent='Tap on '+stickerAvatar+' to place '+dressStickers[stickerSelected][1]});
+const stage=$('#dressStage');
+let drag=null;
+function coords(e){const r=stage.getBoundingClientRect();return {x:Math.max(2,Math.min(98,(e.clientX-r.left)*100/r.width)),y:Math.max(2,Math.min(98,(e.clientY-r.top)*100/r.height))}}
+stage.onpointerdown=e=>{
+ const target=e.target.closest('[data-placed]');
+ if(target){stickerActive=+target.dataset.placed;drag={index:stickerActive,moved:false};target.setPointerCapture(e.pointerId);document.querySelectorAll('[data-placed]').forEach(x=>x.classList.toggle('active',x===target));e.preventDefault();return}
+ const pos=coords(e),type=stickerSelected;
+ const newSticker={type,x:+pos.x.toFixed(2),y:+pos.y.toFixed(2),size:dressStickers[type][2]};
+ (state.stickerPages[stickerAvatar]||=[]).push(newSticker);
+ stickerActive=state.stickerPages[stickerAvatar].length-1;save();stickersView();
+};
+stage.onpointermove=e=>{
+ if(!drag)return;
+ const pos=coords(e),item=state.stickerPages[stickerAvatar][drag.index];if(!item)return;
+ item.x=+pos.x.toFixed(2);item.y=+pos.y.toFixed(2);drag.moved=true;
+ const el=stage.querySelector(`[data-placed="${drag.index}"]`);if(el){el.style.left=item.x+'%';el.style.top=item.y+'%'}
+};
+stage.onpointerup=()=>{if(drag){save();drag=null}};
+stage.onpointercancel=()=>{if(drag){save();drag=null}};
+$('#stickerBigger').onclick=()=>resizeSticker(3);
+$('#stickerSmaller').onclick=()=>resizeSticker(-3);
+function resizeSticker(delta){const item=(state.stickerPages[stickerAvatar]||[])[stickerActive];if(!item)return toast('Tap a sticker on the avatar first');item.size=Math.min(70,Math.max(9,(item.size||20)+delta));save();stickersView()}
+$('#stickerRemove').onclick=()=>{if(stickerActive===null)return toast('Tap a sticker first');state.stickerPages[stickerAvatar].splice(stickerActive,1);stickerActive=null;save();stickersView()};
+$('#stickerClear').onclick=()=>{if(!confirm('Remove all stickers from '+stickerAvatar+'?'))return;state.stickerPages[stickerAvatar]=[];stickerActive=null;save();stickersView()};
+$('#stickerSave').onclick=()=>{
+ const canvas=document.createElement('canvas');canvas.width=700;canvas.height=700;
+ const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,700,700);
+ const img=new Image();img.onload=()=>{ctx.drawImage(img,0,0,700,700);
+ for(const item of state.stickerPages[stickerAvatar]||[]){ctx.font=`${(item.size||20)*2}px "Segoe UI Emoji","Apple Color Emoji",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(dressStickers[item.type][0],item.x*7,item.y*7)}
+ const a=document.createElement('a');a.download='zf-sticker-'+stickerAvatar.toLowerCase()+'.png';a.href=canvas.toDataURL('image/png');a.click()};img.onerror=()=>toast('Avatar image could not be loaded');img.src='/assets/'+stickerAvatar.toLowerCase()+'.png';
+};
+}
 
 
 const boardCatalog=[
