@@ -207,12 +207,35 @@ $('#stickerSmaller').onclick=()=>resizeSticker(-2);
 function resizeSticker(delta){const item=(state.stickerPages[stickerAvatar]||[])[stickerActive];if(!item)return toast('Tap a sticker on the avatar first');item.size=Math.min(220,Math.max(9,(item.size||35)+delta));save();stickersView()}
 $('#stickerRemove').onclick=()=>{if(stickerActive===null)return toast('Tap a sticker first');state.stickerPages[stickerAvatar].splice(stickerActive,1);stickerActive=null;save();stickersView()};
 $('#stickerClear').onclick=()=>{if(!confirm('Remove all stickers from '+stickerAvatar+'?'))return;state.stickerPages[stickerAvatar]=[];stickerActive=null;save();stickersView()};
-$('#stickerSave').onclick=()=>{
- const canvas=document.createElement('canvas');canvas.width=700;canvas.height=700;
- const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,700,700);
- const img=new Image();img.onload=()=>{ctx.drawImage(img,0,0,700,700);
- for(const item of state.stickerPages[stickerAvatar]||[]){ctx.font=`${(item.size||20)*2}px "Segoe UI Emoji","Apple Color Emoji",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.save();ctx.translate(item.x*7,item.y*7);ctx.rotate((item.rotation||0)*Math.PI/180);ctx.scale(item.flipX||1,item.flipY||1);ctx.fillText(dressStickers[item.type][0],0,0);ctx.restore()}
- const a=document.createElement('a');a.download='zf-sticker-'+stickerAvatar.toLowerCase()+'.png';a.href=canvas.toDataURL('image/png');a.click()};img.onerror=()=>toast('Avatar image could not be loaded');img.src='/assets/'+stickerAvatar.toLowerCase()+'.png';
+$('#stickerSave').onclick=async()=>{
+ const stage=document.getElementById('dressStage');
+ const btn=document.getElementById('stickerSave');
+ const previous=btn.textContent;btn.disabled=true;btn.textContent='Saving picture...';
+ try{
+  // Capture the actual displayed DOM, not a separately redrawn emoji canvas.
+  // This preserves the on-screen sticker font, rotation, scale, flip and coordinates.
+  if(!window.htmlToImage){
+   await new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src='https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js';
+    script.onload=resolve;script.onerror=()=>reject(new Error('Picture saver could not load. Check internet connection.'));
+    document.head.appendChild(script);
+   });
+  }
+  const selected=stage.querySelector('.placed-sticker.active');
+  if(selected)selected.classList.remove('active');
+  const data=await window.htmlToImage.toPng(stage,{
+   pixelRatio:2,cacheBust:true,backgroundColor:'#ffffff',
+   filter:node=>!(node.classList&&node.classList.contains('sticker-controls-overlay'))
+  });
+  if(selected)selected.classList.add('active');
+  const link=document.createElement('a');
+  link.download='zf-sticker-'+stickerAvatar.toLowerCase()+'.png';
+  link.href=data;document.body.appendChild(link);link.click();link.remove();
+ }catch(error){
+  console.error('Sticker picture save failed',error);
+  toast('Could not save the picture. Please check your internet connection and try again.');
+ }finally{btn.disabled=false;btn.textContent=previous}
 };
 }
 
