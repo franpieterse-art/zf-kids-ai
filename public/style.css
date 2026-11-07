@@ -147,3 +147,28 @@
 
 /* V30 precise sticker placement */
 .dress-tools{max-width:700px;margin:10px auto}.dress-tools button{min-width:85px}
+
+/* V32: Option A - animation of original 2D/3D-look avatar images, no replacement assets */
+.chat-panel .friend-stage{position:relative;isolation:isolate;overflow:visible}
+.chat-panel .friend-stage .animated-friend{transform-origin:50% 75%;will-change:transform,filter;animation:zf-breathe 3.4s ease-in-out infinite}
+.chat-panel .friend-stage[data-mood="speaking"] .animated-friend{animation:zf-talk 0.22s ease-in-out infinite alternate}
+.chat-panel .friend-stage[data-mood="listening"] .animated-friend{animation:zf-listen 1.3s ease-in-out infinite}
+.chat-panel .friend-stage[data-mood="thinking"] .animated-friend{animation:zf-think 1.7s ease-in-out infinite}
+.chat-panel .friend-stage[data-mood="happy"] .animated-friend{animation:zf-hop .52s ease-in-out 2}
+.chat-panel .friend-stage[data-mood="wave"] .animated-friend{animation:zf-wave .45s ease-in-out 4}
+.chat-panel .friend-stage[data-mood="dance"] .animated-friend{animation:zf-dance .48s ease-in-out 7}
+.friend.friend-dancing img{animation:zf-dance .45s ease-in-out 6!important;transform-origin:50% 75%}
+.friend-blink{position:absolute;inset:15% 15% auto;height:18%;border-radius:50%;background:linear-gradient(180deg,#ffffff16,#ffffff38);opacity:0;pointer-events:none;z-index:2;animation:zf-blink 5.7s ease-in-out infinite}
+.friend-stage.blink-now .friend-blink{animation:zf-blink .65s ease-in-out 1}
+.friend-speech-pulse{position:absolute;left:50%;bottom:17%;width:26px;height:12px;border:3px solid #ffb4cf;background:#5d204d88;border-radius:50%;transform:translateX(-50%) scale(.2);opacity:0;pointer-events:none;z-index:3}
+.friend-stage[data-mood="speaking"] .friend-speech-pulse{animation:zf-mouth .18s ease-in-out infinite alternate;opacity:.85}
+@keyframes zf-breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.018)}}
+@keyframes zf-talk{from{transform:translateY(1px) rotate(-1deg) scale(1)}to{transform:translateY(-2px) rotate(1deg) scale(1.02)}}
+@keyframes zf-listen{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(3deg)}}
+@keyframes zf-think{0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(4deg) translateY(-3px)}}
+@keyframes zf-hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-13px) scale(1.04)}}
+@keyframes zf-wave{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(7deg) translateY(-4px)}}
+@keyframes zf-dance{0%,100%{transform:rotate(-10deg) translateX(-5px) scale(1.02)}50%{transform:rotate(10deg) translateX(5px) scale(1.05)}}
+@keyframes zf-blink{0%,44%,54%,100%{opacity:0;transform:scaleY(.1)}48%,50%{opacity:.5;transform:scaleY(.3)}}
+@keyframes zf-mouth{from{transform:translateX(-50%) scale(.65,.4)}to{transform:translateX(-50%) scale(1.1,1.2)}}
+@media(prefers-reduced-motion:reduce){.chat-panel .friend-stage .animated-friend,.friend.friend-dancing img,.friend-blink,.friend-speech-pulse{animation:none!important}}
